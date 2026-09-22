@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>猪了个猪</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐷</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ 首页 ============ -->
+  <section id="home" class="screen home-screen">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+
+    <div class="home-head">
+      <div class="logo-badge" id="logoBadge"></div>
+      <h1 class="game-title">猪了个猪</h1>
+      <p class="slogan">消完一层砖，领回一头猪</p>
+    </div>
+
+    <button id="startBtn" class="big-btn">
+      <span class="big-btn-emoji">🎮</span>
+      开始挑战 · 第 <span id="homeLevel">1</span> 关
+    </button>
+    <button id="rulesBtn" class="ghost-btn">📖 玩法说明</button>
+
+    <div id="penCard" class="pen-card" title="点开查看我的小猪">
+      <div class="pen-info">
+        <span class="pen-title">🏡 我的小猪圈</span>
+        <span class="pen-count">已养 <b id="pigCount">0</b> 头</span>
+      </div>
+      <div class="pen-yard" id="penYard">
+        <span class="pen-empty-hint">猪圈还空着，快去通关抱小猪吧～</span>
+      </div>
+      <div class="pen-cta">点我进猪圈看看 👉</div>
+    </div>
+
+    <p class="home-foot">猪了个猪 · 每通关一关奖励一头随机小猪</p>
+  </section>
+
+  <!-- ============ 游戏页 ============ -->
+  <section id="game" class="screen game-screen hidden">
+    <header class="game-topbar">
+      <button id="backBtn" class="icon-btn" title="返回首页">🏠</button>
+      <div class="level-pill">第 <span id="gameLevel">1</span> 关</div>
+      <div class="topbar-btns">
+        <button id="musicBtn" class="icon-btn" title="背景音乐">🎵</button>
+        <button id="sfxBtn" class="icon-btn" title="音效">🔊</button>
+      </div>
+    </header>
+
+    <div class="power-bar">
+      <button class="power-btn" id="undoBtn">
+        <span class="power-ico">↩️</span>
+        <span class="power-name">撤销</span>
+        <span class="power-num" id="undoNum">×3</span>
+      </button>
+      <button class="power-btn" id="shuffleBtn">
+        <span class="power-ico">🔀</span>
+        <span class="power-name">洗牌</span>
+        <span class="power-num" id="shuffleNum">×1</span>
+      </button>
+      <button class="power-btn" id="outBtn">
+        <span class="power-ico">📤</span>
+        <span class="power-name">移出</span>
+        <span class="power-num" id="outNum">×1</span>
+      </button>
+    </div>
+
+    <div id="boardArea" class="board-area">
+      <div id="boardWrap">
+        <div id="board"></div>
+      </div>
+    </div>
+
+    <div id="trayBar" class="tray-bar hidden">
+      <span class="tray-label">暂存（点击收回）</span>
+      <div id="tray" class="tray-track"></div>
+    </div>
+
+    <div class="slot-bar">
+      <div id="slotTrack" class="slot-track">
+        <div class="slot-cell"></div><div class="slot-cell"></div><div class="slot-cell"></div>
+        <div class="slot-cell"></div><div class="slot-cell"></div><div class="slot-cell"></div>
+        <div class="slot-cell"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 猪圈弹窗 ============ -->
+  <div class="modal hidden" id="penModal">
+    <div class="modal-mask"></div>
+    <div class="modal-card pen-modal">
+      <button class="modal-close" data-close>✕</button>
+      <h2 class="modal-title">🏡 我的小猪圈</h2>
+      <div class="pen-stats" id="penStats"></div>
+      <div class="pen-grid" id="penGrid"></div>
+      <button id="clearPigsBtn" class="text-danger">清空猪圈（放生全部小猪）</button>
+    </div>
+  </div>
+
+  <!-- ============ 玩法说明 ============ -->
+  <div class="modal hidden" id="rulesModal">
+    <div class="modal-mask"></div>
+    <div class="modal-card">
+      <button class="modal-close" data-close>✕</button>
+      <h2 class="modal-title">📖 玩法说明</h2>
+      <ul class="rules-list">
+        <li>👆 点击<b>没有被其他砖块压住</b>的砖块，它会飞进下方木槽。</li>
+        <li>🟰 木槽里凑齐 <b>3 个相同</b>的砖块就会自动消除。</li>
+        <li>💀 木槽最多放 <b>7 块</b>砖，一旦放满还不能消除，挑战失败。</li>
+        <li>🧰 道具：<b>撤销</b>退回上一块、<b>洗牌</b>重排砖块、<b>移出</b>把 3 块砖暂存起来。</li>
+        <li>🎉 清空全部砖块即通关，<b>奖励一头随机小猪</b>，养进你的猪圈！</li>
+      </ul>
+      <button class="big-btn small" data-close>我知道了</button>
+    </div>
+  </div>
+
+  <!-- ============ 通关弹窗 ============ -->
+  <div class="modal hidden" id="winModal">
+    <div class="modal-mask"></div>
+    <div class="modal-card win-card">
+      <h2 class="win-title">🎉 通关成功！</h2>
+      <p class="win-sub">恭喜获得一头新小猪</p>
+      <div class="reward-pig" id="rewardPig"></div>
+      <div class="reward-name" id="rewardName">嘟嘟</div>
+      <span class="reward-tag" id="rewardTag">小粉猪</span>
+      <div class="modal-actions">
+        <button class="big-btn small" id="nextLevelBtn">下一关 ➡️</button>
+        <button class="ghost-btn small" id="visitPenBtn">去猪圈看看</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 失败弹窗 ============ -->
+  <div class="modal hidden" id="loseModal">
+    <div class="modal-mask"></div>
+    <div class="modal-card">
+      <div class="lose-emoji">🐷💫</div>
+      <h2 class="modal-title">槽位放满啦</h2>
+      <p class="lose-sub">小猪还在等你，再试一次吧！</p>
+      <div class="modal-actions">
+        <button class="big-btn small" id="retryBtn">🔁 再来一次</button>
+        <button class="ghost-btn small" id="loseHomeBtn">回首页</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confettiBox"></div>
+</div>
+<script src="js/game.js"></script>
+</body>
+</html>
