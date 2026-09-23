@@ -13,7 +13,8 @@
   var SLOT_MAX = 7;
 
   // 砖块图案（农场主题）
-  var EMOJIS = ['🐷', '🐮', '🐔', '🐑', '🌽', '🥕', '🍎', '🍆', '🌶️', '🥬', '🍄', '🌰'];
+  var EMOJIS = ['🐷', '🐮', '🐔', '🐑', '🐰', '🦆', '🐸', '🐝', '🐢', '🦊', '🦉', '🐠',
+                '🌽', '🥕', '🍎', '🍆', '🌶️', '🥬', '🍄', '🌰', '🍉', '🍇', '🍓', '🥝'];
 
   // 小猪配色库：每个色系有专属品种名和名字池，随机叠加斑纹/配饰/眼睛 => 每头都独一无二
   var PIG_PALETTES = [
@@ -482,7 +483,7 @@
    * 关卡生成
    * ============================================================ */
   function genLevel(level) {
-    var layerCount = Math.min(3 + Math.floor((level - 1) / 2), 6);
+    var layerCount = Math.min(3 + Math.floor((level - 1) / 2), 7);
     var cells = [];
     var L, r, c;
     for (L = 0; L < layerCount; L++) {
@@ -501,7 +502,7 @@
     while (cells.length % 3 !== 0) cells.splice(Math.floor(Math.random() * cells.length), 1);
 
     var triples = cells.length / 3;
-    var typeCount = Math.min(Math.max(4, Math.round(5 + (level - 1) * 1.1)), EMOJIS.length, triples);
+    var typeCount = Math.min(Math.max(4, Math.round(5 + (level - 1) * 1.4)), EMOJIS.length, triples);
 
     // 每种图案至少 1 组（3 块），其余随机分配
     var counts = [];
@@ -556,6 +557,7 @@
     $('#gameLevel').textContent = level;
     trayEl.innerHTML = '';
     trayBar.classList.add('hidden');
+    slotCells.forEach(function (c) { c.innerHTML = ''; });
     boardEl.innerHTML = '';
     boardEl.style.width = data.w + 'px';
     boardEl.style.height = data.h + 'px';
@@ -666,7 +668,10 @@
     var matched = S.slots.filter(function (t) { return t.type === matchType; }).slice(0, 3);
     matched.forEach(function (t) { t.el.classList.add('removing'); });
     snd.match();
-    S.history = [];
+    // 只移除已消除砖块的历史，仍留在木槽里的砖块依然可以撤销
+    var matchedIds = {};
+    matched.forEach(function (t) { matchedIds[t.id] = 1; });
+    S.history = S.history.filter(function (id) { return !matchedIds[id]; });
 
     setTimeout(function () {
       matched.forEach(function (t) {
@@ -697,10 +702,13 @@
   /* ---------- 道具：撤销 ---------- */
   function doUndo() {
     if (!S || S.over || S.busy || S.powers.undo <= 0 || S.history.length === 0) return;
-    var id = S.history.pop();
     var pos = -1, tile = null;
-    for (var i = 0; i < S.slots.length; i++) {
-      if (S.slots[i].id === id) { tile = S.slots[i]; pos = i; break; }
+    // 跳过任何已不在木槽中的陈旧记录，找到最近一块真正可撤回的砖
+    while (S.history.length && !tile) {
+      var id = S.history.pop();
+      for (var i = 0; i < S.slots.length; i++) {
+        if (S.slots[i].id === id) { tile = S.slots[i]; pos = i; break; }
+      }
     }
     if (!tile) return;
     S.slots.splice(pos, 1);
@@ -710,6 +718,7 @@
     tile.el.style.top = tile.y + 'px';
     tile.el.style.zIndex = tile.layer * 100;
     boardEl.appendChild(tile.el);
+    layoutSlots();
     refreshBlocked();
     S.powers.undo--;
     renderPowers();
@@ -747,7 +756,10 @@
     });
     trayBar.classList.remove('hidden');
     layoutSlots();
-    S.history = [];
+    // 被移出暂存的砖块不能再撤销，其余历史保留
+    var movedIds = {};
+    moved.forEach(function (t) { movedIds[t.id] = 1; });
+    S.history = S.history.filter(function (id) { return !movedIds[id]; });
     S.powers.out--;
     renderPowers();
     snd.prop();
